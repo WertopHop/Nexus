@@ -246,8 +246,8 @@ class P2PMessenger:
 
 async def main():
     if len(sys.argv) < 3:
-        print("Использование: python p2p_messenger_webrtc.py <peer_id> <signaling_server>")
-        print("Пример: python p2p_messenger_webrtc.py alice http://localhost:8080")
+        print("Использование: python Nexus-socket.py <peer_id> <signaling_server>")
+        print("Пример: python Nexus-socket.py alice http://localhost:8080")
         sys.exit(1)
     
     peer_id = sys. argv[1]
