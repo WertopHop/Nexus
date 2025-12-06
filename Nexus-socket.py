@@ -71,7 +71,7 @@ class P2PMessenger:
         
         @pc.on("datachannel")
         def on_datachannel(channel):
-            asyncio.create_task(self. setup_data_channel(peer_id, channel))
+            asyncio.create_task(self.setup_data_channel(peer_id, channel))
         
         @pc.on("icecandidate")
         async def on_icecandidate(candidate):
@@ -89,9 +89,9 @@ class P2PMessenger:
             if pc.connectionState == "failed":
                 await pc.close()
                 if peer_id in self.peer_connections:
-                    del self. peer_connections[peer_id]
+                    del self.peer_connections[peer_id]
                 if peer_id in self.data_channels:
-                    del self. data_channels[peer_id]
+                    del self.data_channels[peer_id]
         
         return pc
     
@@ -124,7 +124,7 @@ class P2PMessenger:
         await pc.setLocalDescription(offer)
         
         await self.send_signal(peer_id, 'offer', {
-            'sdp': pc.localDescription. sdp,
+            'sdp': pc.localDescription.sdp,
             'type': pc.localDescription.type
         })
 
@@ -150,7 +150,7 @@ class P2PMessenger:
             self.pending_candidates[peer_id] = []
 
     async def handle_answer(self, peer_id, answer_data):
-        pc = self.peer_connections. get(peer_id)
+        pc = self.peer_connections.get(peer_id)
         if not pc:
             print(f"❌ Нет peer connection для {peer_id}")
             return
@@ -174,10 +174,10 @@ class P2PMessenger:
             self.pending_candidates[peer_id].append(candidate_data)
     
     async def add_ice_candidate(self, pc, candidate_data):
-        if candidate_data and candidate_data. get('candidate'):
+        if candidate_data and candidate_data.get('candidate'):
             candidate = RTCIceCandidate(
                 candidate=candidate_data['candidate'],
-                sdpMid=candidate_data. get('sdpMid'),
+                sdpMid=candidate_data.get('sdpMid'),
                 sdpMLineIndex=candidate_data.get('sdpMLineIndex')
             )
             await pc.addIceCandidate(candidate)
@@ -192,10 +192,10 @@ class P2PMessenger:
 
     async def send_message(self, message):
         if not self.data_channels:
-            print("❌ Нет активных соединений.  Используйте 'list' и 'call <peer_id>'")
+            print("❌ Нет активных соединений. Используйте 'list' и 'call <peer_id>'")
             return
         
-        for peer_id, channel in self.data_channels. items():
+        for peer_id, channel in self.data_channels.items():
             if channel.readyState == "open":
                 channel.send(message)
         
@@ -248,7 +248,7 @@ async def main():
         print("Пример: python Nexus-socket.py alice http://localhost:8080")
         sys.exit(1)
     
-    peer_id = sys. argv[1]
+    peer_id = sys.argv[1]
     signaling_server = sys.argv[2]
     
     messenger = P2PMessenger(peer_id, signaling_server)
