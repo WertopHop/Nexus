@@ -233,9 +233,7 @@ class P2PMessenger:
         print(f"🚀 Запуск P2P мессенджера...")
         print(f"🆔 Ваш ID: {self.peer_id}")
         print(f"🌐 Сервер: {self.signaling_server}\n")
-        
         await self.connect_to_signaling()
-        
         await self.input_loop()
         
         for pc in self.peer_connections.values():
