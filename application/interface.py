@@ -13,7 +13,7 @@ class CustomTitleBar(QWidget):
         self.drag_position = QPoint()
         self.setFixedHeight(39)
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(10, 0, 5, 0)
+        layout.setContentsMargins(10, 0, 0, 0)
         layout.setSpacing(0)
         self.title_label = QLabel("Nexus")
         self.title_label.setStyleSheet("""
@@ -105,6 +105,88 @@ class CustomTitleBar(QWidget):
         self.maximize_window()
 
 
+class MainWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setStyleSheet("background-color: #2b2b2b;")
+        main_frame = QHBoxLayout(self)
+        main_frame.setContentsMargins(0, 0, 0, 0)
+        main_frame.setSpacing(0)
+        contacts_frame = QVBoxLayout(self)
+        contacts_frame.setContentsMargins(0, 0, 0, 0)
+        contacts_frame.setSpacing(0)
+        messages_text = ["Hello!", "How are you?", "Let's meet up.", "See you later!", "Goodbye!"]
+        contacts = ["Bob", "Alice", "Charlie", "David", "Eve"]
+        contacts_style = """
+            QPushButton { 
+                background-color: #555555;
+                border: none;
+                font-size: 20px;
+                padding: 5px;
+            }
+            QPushButton:hover {
+                background-color: #202920;
+            }
+            QPushButton:active {
+                background-color: #111111;
+            }
+        """
+        self.contacts_buttons = {}    
+        self.add_buttons(contacts, contacts_frame, contacts_style)
+        contacts_frame.addStretch()
+
+        message_frame = QVBoxLayout(self)
+        message_frame.setContentsMargins(0, 0, 0, 0)
+        message_frame.setSpacing(0)
+        messages = QVBoxLayout(self)
+        messages.setContentsMargins(10, 10, 10, 10)
+        messages.setSpacing(10)
+
+
+
+
+
+        input_message = QLineEdit()
+        input_message.setFixedHeight(40)
+        input_message.setStyleSheet("""
+            QLineEdit {
+                background-color: #444444;
+                border: none;  
+                font-size: 18px;
+                color: #ffffff;
+                padding: 5px;
+            }
+            QLineEdit:focus {
+                border: 2px solid #00ff00;
+            }
+        """)
+        input_message.setPlaceholderText("Type a message...")
+        messages.addStretch(1)
+        message_frame.addLayout(messages)
+        message_frame.addWidget(input_message)
+        
+
+        main_frame.addLayout(contacts_frame)
+        main_frame.addLayout(message_frame)
+
+    def add_buttons(self, contacts, contacts_frame, contacts_style):
+        for contact in contacts:
+            self.contact = QPushButton()
+            self.contact.setFixedSize(300, 60)
+            self.contact.setStyleSheet(contacts_style)
+            self.contact.setText(contact)
+            self.contact.clicked.connect(lambda checked, c=contact: self.chat_with_contact(c))
+            contacts_frame.addWidget(self.contact)
+            self.contacts_buttons[contact] = self.contact
+
+    def chat_with_contact(self, contact):
+        print(f"Chatting with {contact}")
+
+
+        
+    
+
+
 class interface(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -115,12 +197,12 @@ class interface(QMainWindow):
         main_layout = QVBoxLayout(central_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
-        self.title_bar = CustomTitleBar(self)
-        main_layout.addWidget(self.title_bar)
-        self.content_widget = QWidget()
-        self.content_widget.setStyleSheet("background-color: #1a1a1a;")  # Темный фон для контента
-        main_layout.addWidget(self.content_widget)
-        self.setGeometry(100, 100, 1200, 900)
+        main_layout.addWidget(CustomTitleBar(self))
+        main_layout.addWidget(MainWidget(self))
+
+
+
+        self.setGeometry(100, 100, 1200, 700)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
 
