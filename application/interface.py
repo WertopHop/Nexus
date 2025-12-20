@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import (QApplication, QMainWindow, QGridLayout, QWidget, 
+from PySide6.QtWidgets import (QApplication, QMainWindow, QGridLayout, QWidget, QScrollArea,
                                QPushButton, QLineEdit, QHBoxLayout, QVBoxLayout, QLabel)
 from PySide6.QtCore import Qt, QSize, QPoint
 from PySide6.QtGui import QIcon, QPixmap, QScreen
@@ -115,7 +115,7 @@ class MainWidget(QWidget):
         contacts_frame = QVBoxLayout(self)
         contacts_frame.setContentsMargins(0, 0, 0, 0)
         contacts_frame.setSpacing(0)
-        messages_text = ["Hello!", "How are you?", "Let's meet up.", "See you later!", "Goodbye!"]
+        messages_text = {"Hello!":1, "How are you?":1, "Let's meet up.":2, "See you later!":2, "Goodbye!":1, "Take care!":2, "What's up?":1, "Long time no see!":2, "Happy to hear from you!":1, "Let's catch up soon.":2}
         contacts = ["Bob", "Alice", "Charlie", "David", "Eve"]
         contacts_style = """
             QPushButton { 
@@ -135,16 +135,56 @@ class MainWidget(QWidget):
         self.add_buttons(contacts, contacts_frame, contacts_style)
         contacts_frame.addStretch()
 
+        messages_style = """
+            QLabel {
+                background-color: #4f6ef7;
+                border-radius: 10px;
+                padding: 30px;
+                font-size: 16px;
+                color: #ffffff;
+            }
+            """
+
         message_frame = QVBoxLayout(self)
         message_frame.setContentsMargins(0, 0, 0, 0)
         message_frame.setSpacing(0)
-        messages = QVBoxLayout(self)
+        
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setStyleSheet("""
+            QScrollArea {
+                background-color: #2b2b2b;
+                border: none;
+            }
+            QScrollBar:vertical {
+                background-color: #2b2b2b;
+                width: 12px;
+                margin: 0px;
+            }
+            QScrollBar::handle:vertical {
+                background-color: #555555;
+                border-radius: 6px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background-color: #666666;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+        """)
+        
+        messages_container = QWidget()
+        messages_container.setStyleSheet("background-color: #2b2b2b;")
+        messages = QVBoxLayout(messages_container)
         messages.setContentsMargins(10, 10, 10, 10)
         messages.setSpacing(10)
 
+        for message, sender in messages_text.items():
+            self.add_message(message, sender, messages, messages_style)
 
-
-
+        messages.addStretch(1)
+        scroll_area.setWidget(messages_container)
 
         input_message = QLineEdit()
         input_message.setFixedHeight(40)
@@ -161,13 +201,24 @@ class MainWidget(QWidget):
             }
         """)
         input_message.setPlaceholderText("Type a message...")
-        messages.addStretch(1)
-        message_frame.addLayout(messages)
+        
+        message_frame.addWidget(scroll_area)
         message_frame.addWidget(input_message)
         
-
         main_frame.addLayout(contacts_frame)
         main_frame.addLayout(message_frame)
+
+    def add_message(self, message, sender, messages_layout, messages_style):
+        message_label = QLabel(message)
+        message_label.setWordWrap(True)
+        message_label.setStyleSheet(messages_style)
+        if sender == 1:
+            message_label.setAlignment(Qt.AlignLeft)
+        else:
+            message_label.setAlignment(Qt.AlignRight)
+        messages_layout.addWidget(message_label)
+
+
 
     def add_buttons(self, contacts, contacts_frame, contacts_style):
         for contact in contacts:
