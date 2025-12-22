@@ -1,3 +1,4 @@
+from unicodedata import name
 from PySide6.QtWidgets import (QApplication, QMainWindow, QGridLayout, QWidget, QScrollArea,
                                QPushButton, QLineEdit, QHBoxLayout, QVBoxLayout, QLabel)
 from PySide6.QtCore import Qt, QSize, QPoint
@@ -127,19 +128,17 @@ class MainWidget(QWidget):
             QPushButton:hover {
                 background-color: #202920;
             }
-            QPushButton:active {
-                background-color: #111111;
-            }
         """
-        self.contacts_buttons = {}    
-        self.add_buttons(contacts, contacts_frame, contacts_style)
+        self.contacts_buttons = {}  
+        for name in contacts:  
+            self.add_buttons(name, contacts_frame, contacts_style)
         contacts_frame.addStretch()
 
         messages_style = """
             QLabel {
-                background-color: #4f6ef7;
+                background-color: #2d4532;
                 border-radius: 10px;
-                padding: 30px;
+                padding: 20px;
                 font-size: 16px;
                 color: #ffffff;
             }
@@ -177,7 +176,6 @@ class MainWidget(QWidget):
         messages_container = QWidget()
         messages_container.setStyleSheet("background-color: #2b2b2b;")
         messages = QVBoxLayout(messages_container)
-        messages.setContentsMargins(10, 10, 10, 10)
         messages.setSpacing(10)
 
         for message, sender in messages_text.items():
@@ -209,29 +207,38 @@ class MainWidget(QWidget):
         main_frame.addLayout(message_frame)
 
     def add_message(self, message, sender, messages_layout, messages_style):
-        message_label = QLabel(message)
-        message_label.setWordWrap(True)
-        message_label.setStyleSheet(messages_style)
-        if sender == 1:
-            message_label.setAlignment(Qt.AlignLeft)
-        else:
-            message_label.setAlignment(Qt.AlignRight)
-        messages_layout.addWidget(message_label)
+        try:
+            message_label = QLabel(message)
+            message_label.setWordWrap(True)
+            message_label.setStyleSheet(messages_style)
+            if sender == 1:
+                message_label.setAlignment(Qt.AlignLeft)
+            else:
+                message_label.setAlignment(Qt.AlignRight)
+            messages_layout.addWidget(message_label)
+            messages_layout.addSpacing(20)
+        except Exception as e:
+            print(f"Error adding message: {e}")
 
 
 
-    def add_buttons(self, contacts, contacts_frame, contacts_style):
-        for contact in contacts:
-            self.contact = QPushButton()
-            self.contact.setFixedSize(300, 60)
-            self.contact.setStyleSheet(contacts_style)
-            self.contact.setText(contact)
-            self.contact.clicked.connect(lambda checked, c=contact: self.chat_with_contact(c))
-            contacts_frame.addWidget(self.contact)
-            self.contacts_buttons[contact] = self.contact
+    def add_buttons(self, name, contacts_frame, contacts_style):
+        try:
+            contact = QPushButton()
+            contact.setFixedSize(300, 60)
+            contact.setStyleSheet(contacts_style)
+            contact.setText(name)
+            contact.clicked.connect(lambda checked, c=name: self.chat_with_contact(c))
+            contacts_frame.addWidget(contact)
+            self.contacts_buttons[name] = contact
+        except Exception as e:
+            print(f"Error adding contact button: {e}")
 
     def chat_with_contact(self, contact):
-        print(f"Chatting with {contact}")
+        try:
+            print(f"Chatting with {contact}")
+        except Exception as e:
+            print(f"Error: {e}")
 
 
         
