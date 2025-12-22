@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QGridLayout, QWidget, 
 from PySide6.QtCore import Qt, QSize, QPoint
 from PySide6.QtGui import QIcon, QPixmap, QScreen
 import sys
+import database as db
 
 
 class CustomTitleBar(QWidget):
@@ -110,50 +111,52 @@ class MainWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setStyleSheet("background-color: #2b2b2b;")
+        self.d_b = db.Database()
         main_frame = QHBoxLayout(self)
         main_frame.setContentsMargins(0, 0, 0, 0)
         main_frame.setSpacing(0)
-        main_frame.addLayout(self.contacts_frame_widget())
-        main_frame.addLayout(self.message_frame_widget())
+        main_frame.addLayout(self.contacts_frame_widget(), 2)
+        main_frame.addLayout(self.message_frame_widget(), 8)
 
 
     def contacts_frame_widget(self):
-        contacts_frame = QVBoxLayout(self)
+        contacts_frame = QVBoxLayout()
         contacts_frame.setContentsMargins(0, 0, 0, 0)
         contacts_frame.setSpacing(0)
-        contacts = ["Bob", "Alice", "Charlie", "David", "Eve"]
-        contacts_style = """
+    
+        contacts_frame.addWidget(self.button_add_widget())
+        contacts_frame.addWidget(self.scroll_area_contacts_widget(), 1)
+        return contacts_frame
+
+    def button_add_widget(self):
+        button_add_frame = QWidget()
+        button_add_frame.setFixedSize(300, 100)
+        button_add_style = """
             QPushButton { 
-                background-color: #555555;
-                border: none;
-                font-size: 20px;
-                padding: 5px;
+                background-color: #2d4532;
+                border-radius: 35%;
+                padding: 20px;
+                font-size: 16px;
+                color: #ffffff;
             }
             QPushButton:hover {
                 background-color: #202920;
             }
         """
-        self.contacts_buttons = {}  
-        for name in contacts:  
-            self.add_buttons(name, contacts_frame, contacts_style)
-        contacts_frame.addStretch()
-        return contacts_frame
+        button_add = QPushButton()
+        button_add.setFixedSize(250, 70)
+        button_add.setStyleSheet(button_add_style)
+        button_add.setText("Add Contact")
+        button_add.clicked.connect(lambda checked: self.chat_with_contact())
+        button_add_frame_layout = QHBoxLayout(button_add_frame)
+        button_add_frame_layout.addWidget(button_add, alignment=Qt.AlignHCenter)
+        return button_add_frame
 
-
-    def message_frame_widget(self):
-        message_frame = QVBoxLayout(self)
-        message_frame.setContentsMargins(0, 0, 0, 0)
-        message_frame.setSpacing(0)
-
-        message_frame.addWidget(self.scroll_area_widget())
-        message_frame.addWidget(self.input_message_widget())
-        return message_frame
-
-
-    def scroll_area_widget(self):
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setStyleSheet("""
+    def scroll_area_contacts_widget(self):
+        scroll_area_contacts = QScrollArea()
+        scroll_area_contacts.setWidgetResizable(True)
+        scroll_area_contacts.setFixedWidth(300)
+        scroll_area_contacts.setStyleSheet("""
             QScrollArea {
                 background-color: #2b2b2b;
                 border: none;
@@ -175,8 +178,72 @@ class MainWidget(QWidget):
                 height: 0px;
             }
         """)
-        scroll_area.setWidget(self.messages_container_widget())
-        return scroll_area
+        scroll_area_contacts.setWidget(self.contacts_container_widget())
+        return scroll_area_contacts
+
+
+    def contacts_container_widget(self):
+        contacts_container = QWidget()
+        contacts_container.setStyleSheet("background-color: #2b2b2b;")
+        contacts_frame = QVBoxLayout(contacts_container)
+        contacts_frame.setContentsMargins(0, 0, 0, 0)
+        contacts_frame.setSpacing(0)
+        print(self.d_b.get_contacts())
+        contacts = ["Bob", "Alice", "Charlie", "David", "Eve"]
+        contacts_style = """
+            QPushButton { 
+                background-color: #555555;
+                border: none;
+                font-size: 20px;
+                padding: 5px;
+            }
+            QPushButton:hover {
+                background-color: #202920;
+            }
+        """
+        self.contacts_buttons = {}  
+        for name in contacts:  
+            self.add_buttons(name, contacts_frame, contacts_style)
+        contacts_frame.addStretch()
+        return contacts_container
+
+
+    def message_frame_widget(self):
+        message_frame = QVBoxLayout()
+        message_frame.setContentsMargins(0, 0, 0, 0)
+        message_frame.setSpacing(0)
+        message_frame.addWidget(self.scroll_area_message_widget())
+        message_frame.addWidget(self.input_message_widget())
+        return message_frame
+
+
+    def scroll_area_message_widget(self):
+        scroll_area_message = QScrollArea()
+        scroll_area_message.setWidgetResizable(True)
+        scroll_area_message.setStyleSheet("""
+            QScrollArea {
+                background-color: #2b2b2b;
+                border: none;
+            }
+            QScrollBar:vertical {
+                background-color: #2b2b2b;
+                width: 12px;
+                margin: 0px;
+            }
+            QScrollBar::handle:vertical {
+                background-color: #555555;
+                border-radius: 6px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background-color: #666666;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+        """)
+        scroll_area_message.setWidget(self.messages_container_widget())
+        return scroll_area_message
 
 
     def messages_container_widget(self):
@@ -235,7 +302,6 @@ class MainWidget(QWidget):
             print(f"Error adding message: {e}")
 
 
-
     def add_buttons(self, name, contacts_frame, contacts_style):
         try:
             contact = QPushButton()
@@ -271,9 +337,6 @@ class interface(QMainWindow):
         main_layout.setSpacing(0)
         main_layout.addWidget(CustomTitleBar(self))
         main_layout.addWidget(MainWidget(self))
-
-
-
         self.setGeometry(100, 100, 1200, 700)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 

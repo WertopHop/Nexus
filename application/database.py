@@ -38,12 +38,19 @@ class Database:
             pass
 
     def add_message(self, contact_name, message, direction=True):
-        self.cursor.execute('SELECT id FROM contacts WHERE name = ?', (contact_name,))
-        contact = self.cursor.fetchone()
-        if contact:
-            contact_id = contact[0]
-            self.cursor.execute('INSERT INTO messages (contact_id, message, direction) VALUES (?, ?, ?)', (contact_id, message, direction))
-            self.connection.commit()
+        try:
+            self.cursor.execute('SELECT id FROM contacts WHERE name = ?', (contact_name,))
+            contact = self.cursor.fetchone()
+            if contact:
+                contact_id = contact[0]
+                self.cursor.execute('INSERT INTO messages (contact_id, message, direction) VALUES (?, ?, ?)', (contact_id, message, direction))
+                self.connection.commit()
+        except Exception as e:
+            print(f"Error adding message: {e}")
+
+    def get_contacts(self):
+        self.cursor.execute('SELECT name FROM contacts')
+        return [row[0] for row in self.cursor.fetchall()]
 
     def get_messages(self, contact_name):
         self.cursor.execute('''
