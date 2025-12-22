@@ -113,10 +113,14 @@ class MainWidget(QWidget):
         main_frame = QHBoxLayout(self)
         main_frame.setContentsMargins(0, 0, 0, 0)
         main_frame.setSpacing(0)
+        main_frame.addLayout(self.contacts_frame_widget())
+        main_frame.addLayout(self.message_frame_widget())
+
+
+    def contacts_frame_widget(self):
         contacts_frame = QVBoxLayout(self)
         contacts_frame.setContentsMargins(0, 0, 0, 0)
         contacts_frame.setSpacing(0)
-        messages_text = {"Hello!":1, "How are you?":1, "Let's meet up.":2, "See you later!":2, "Goodbye!":1, "Take care!":2, "What's up?":1, "Long time no see!":2, "Happy to hear from you!":1, "Let's catch up soon.":2}
         contacts = ["Bob", "Alice", "Charlie", "David", "Eve"]
         contacts_style = """
             QPushButton { 
@@ -133,21 +137,20 @@ class MainWidget(QWidget):
         for name in contacts:  
             self.add_buttons(name, contacts_frame, contacts_style)
         contacts_frame.addStretch()
+        return contacts_frame
 
-        messages_style = """
-            QLabel {
-                background-color: #2d4532;
-                border-radius: 10px;
-                padding: 20px;
-                font-size: 16px;
-                color: #ffffff;
-            }
-            """
 
+    def message_frame_widget(self):
         message_frame = QVBoxLayout(self)
         message_frame.setContentsMargins(0, 0, 0, 0)
         message_frame.setSpacing(0)
-        
+
+        message_frame.addWidget(self.scroll_area_widget())
+        message_frame.addWidget(self.input_message_widget())
+        return message_frame
+
+
+    def scroll_area_widget(self):
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setStyleSheet("""
@@ -172,7 +175,21 @@ class MainWidget(QWidget):
                 height: 0px;
             }
         """)
-        
+        scroll_area.setWidget(self.messages_container_widget())
+        return scroll_area
+
+
+    def messages_container_widget(self):
+        messages_style = """
+            QLabel {
+                background-color: #2d4532;
+                border-radius: 10px;
+                padding: 20px;
+                font-size: 16px;
+                color: #ffffff;
+            }
+            """
+        messages_text = {"Hello!":1, "How are you?":1, "Let's meet up.":2, "See you later!":2, "Goodbye!":1, "Take care!":2, "What's up?":1, "Long time no see!":2, "Happy to hear from you!":1, "Let's catch up soon.":2}
         messages_container = QWidget()
         messages_container.setStyleSheet("background-color: #2b2b2b;")
         messages = QVBoxLayout(messages_container)
@@ -182,8 +199,9 @@ class MainWidget(QWidget):
             self.add_message(message, sender, messages, messages_style)
 
         messages.addStretch(1)
-        scroll_area.setWidget(messages_container)
+        return messages_container
 
+    def input_message_widget(self):
         input_message = QLineEdit()
         input_message.setFixedHeight(40)
         input_message.setStyleSheet("""
@@ -199,12 +217,8 @@ class MainWidget(QWidget):
             }
         """)
         input_message.setPlaceholderText("Type a message...")
-        
-        message_frame.addWidget(scroll_area)
-        message_frame.addWidget(input_message)
-        
-        main_frame.addLayout(contacts_frame)
-        main_frame.addLayout(message_frame)
+        return input_message
+
 
     def add_message(self, message, sender, messages_layout, messages_style):
         try:
