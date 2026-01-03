@@ -54,7 +54,7 @@ class Database:
 
     def get_messages(self, contact_name):
         self.cursor.execute('''
-            SELECT m.message, m.timestamp FROM messages m
+            SELECT m.message, m.direction FROM messages m
             JOIN contacts c ON m.contact_id = c.id
             WHERE c.name = ?
             ORDER BY m.timestamp ASC

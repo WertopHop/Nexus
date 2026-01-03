@@ -20,7 +20,7 @@ class P2PMessenger:
 
         self.sio.on('registered', self.on_registered)
         self.sio.on('peers_list', self.on_peers_list)
-        self.sio. on('signal', self.on_signal)
+        self.sio.on('signal', self.on_signal)
         self.sio.on('error', self.on_error)
 
 

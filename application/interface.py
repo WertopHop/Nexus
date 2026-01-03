@@ -76,13 +76,10 @@ class CustomTitleBar(QWidget):
         self.parent.showMinimized()
     
     def maximize_window(self):
-        print("maximize", self.parent.isMaximized())
         if self.parent.isMaximized():
-            print("restore size")
             self.parent.showNormal()
             self.maximize_btn.setIcon(QIcon("icons/maximize.png"))
         else:
-            print("maximize to full")
             self.parent.showMaximized()
             self.maximize_btn.setIcon(QIcon("icons/restore.png"))
     
@@ -111,7 +108,6 @@ class MainWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setStyleSheet("background-color: #2b2b2b;")
-        self.d_b = db.Database()
         main_frame = QHBoxLayout(self)
         main_frame.setContentsMargins(0, 0, 0, 0)
         main_frame.setSpacing(0)
@@ -130,7 +126,7 @@ class MainWidget(QWidget):
 
     def button_add_widget(self):
         button_add_frame = QWidget()
-        button_add_frame.setFixedSize(300, 100)
+        button_add_frame.setFixedSize(300, 150)
         button_add_style = """
             QPushButton { 
                 background-color: #2d4532;
@@ -143,13 +139,16 @@ class MainWidget(QWidget):
                 background-color: #202920;
             }
         """
+        line_edit = QLineEdit()
+        line_edit.setPlaceholderText("Enter peer ID")
         button_add = QPushButton()
         button_add.setFixedSize(250, 70)
         button_add.setStyleSheet(button_add_style)
         button_add.setText("Add Contact")
-        button_add.clicked.connect(lambda checked: self.chat_with_contact())
-        button_add_frame_layout = QHBoxLayout(button_add_frame)
-        button_add_frame_layout.addWidget(button_add, alignment=Qt.AlignHCenter)
+        button_add.clicked.connect(lambda checked: self.chat_with_contact(line_edit.text()))
+        button_add_frame_layout = QGridLayout(button_add_frame)
+        button_add_frame_layout.addWidget(line_edit, 0, 0, alignment=Qt.AlignHCenter)
+        button_add_frame_layout.addWidget(button_add, 1, 0, alignment=Qt.AlignHCenter)
         return button_add_frame
 
     def scroll_area_contacts_widget(self):
@@ -185,11 +184,10 @@ class MainWidget(QWidget):
     def contacts_container_widget(self):
         contacts_container = QWidget()
         contacts_container.setStyleSheet("background-color: #2b2b2b;")
-        contacts_frame = QVBoxLayout(contacts_container)
-        contacts_frame.setContentsMargins(0, 0, 0, 0)
-        contacts_frame.setSpacing(0)
-        print(self.d_b.get_contacts())
-        contacts = ["Bob", "Alice", "Charlie", "David", "Eve"]
+        self.contacts_frame = QVBoxLayout(contacts_container)
+        self.contacts_frame.setContentsMargins(0, 0, 0, 0)
+        self.contacts_frame.setSpacing(0)
+        contacts = db.Database().get_contacts()
         contacts_style = """
             QPushButton { 
                 background-color: #555555;
@@ -203,8 +201,8 @@ class MainWidget(QWidget):
         """
         self.contacts_buttons = {}  
         for name in contacts:  
-            self.add_buttons(name, contacts_frame, contacts_style)
-        contacts_frame.addStretch()
+            self.add_buttons(name, contacts_style)
+        self.contacts_frame.addStretch()
         return contacts_container
 
 
@@ -247,31 +245,27 @@ class MainWidget(QWidget):
 
 
     def messages_container_widget(self):
-        messages_style = """
+        self.messages_style = """
             QLabel {
                 background-color: #2d4532;
                 border-radius: 10px;
-                padding: 20px;
+                padding: 10px;
                 font-size: 16px;
                 color: #ffffff;
             }
             """
-        messages_text = {"Hello!":1, "How are you?":1, "Let's meet up.":2, "See you later!":2, "Goodbye!":1, "Take care!":2, "What's up?":1, "Long time no see!":2, "Happy to hear from you!":1, "Let's catch up soon.":2}
+        messages_text = [("Hello!",1), ("How are you?",1), ("Let's meet up.",2), ("See you later!",2), ("Goodbye!",1), ("Take care!",2), ("What's up?",1), ("Long time no see!",2), ("Happy to hear from you!",1), ("Let's catch up soon.",2)]
         messages_container = QWidget()
         messages_container.setStyleSheet("background-color: #2b2b2b;")
-        messages = QVBoxLayout(messages_container)
-        messages.setSpacing(10)
-
-        for message, sender in messages_text.items():
-            self.add_message(message, sender, messages, messages_style)
-
-        messages.addStretch(1)
+        self.messages = QVBoxLayout(messages_container)
+        self.messages.setSpacing(10)
+        self.add_message(messages_text)
         return messages_container
 
     def input_message_widget(self):
-        input_message = QLineEdit()
-        input_message.setFixedHeight(40)
-        input_message.setStyleSheet("""
+        self.input_message = QLineEdit()
+        self.input_message.setFixedHeight(40)
+        self.input_message.setStyleSheet("""
             QLineEdit {
                 background-color: #444444;
                 border: none;  
@@ -283,33 +277,45 @@ class MainWidget(QWidget):
                 border: 2px solid #00ff00;
             }
         """)
-        input_message.setPlaceholderText("Type a message...")
-        return input_message
+        self.input_message.setPlaceholderText("Type a message...")
+        return self.input_message
 
 
-    def add_message(self, message, sender, messages_layout, messages_style):
+
+    def remove_messages(self):        
+        while self.messages.count():
+            item = self.messages.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+
+    #def add_contact(self):
+
+    def add_message(self, data_messages):
         try:
-            message_label = QLabel(message)
-            message_label.setWordWrap(True)
-            message_label.setStyleSheet(messages_style)
-            if sender == 1:
-                message_label.setAlignment(Qt.AlignLeft)
-            else:
-                message_label.setAlignment(Qt.AlignRight)
-            messages_layout.addWidget(message_label)
-            messages_layout.addSpacing(20)
+            for message, sender in data_messages:
+                message_label = QLabel(message)
+                message_label.setWordWrap(True)
+                message_label.setStyleSheet(self.messages_style)
+                if sender == 1:
+                    message_label.setAlignment(Qt.AlignLeft)
+                else:
+                    message_label.setAlignment(Qt.AlignRight)
+                self.messages.addWidget(message_label)
+                self.messages.addSpacing(20)
+            self.messages.addStretch(1)
         except Exception as e:
             print(f"Error adding message: {e}")
 
 
-    def add_buttons(self, name, contacts_frame, contacts_style):
+    def add_buttons(self, name, contacts_style):
         try:
             contact = QPushButton()
             contact.setFixedSize(300, 60)
             contact.setStyleSheet(contacts_style)
             contact.setText(name)
             contact.clicked.connect(lambda checked, c=name: self.chat_with_contact(c))
-            contacts_frame.addWidget(contact)
+            self.contacts_frame.addWidget(contact)
             self.contacts_buttons[name] = contact
         except Exception as e:
             print(f"Error adding contact button: {e}")
@@ -317,15 +323,16 @@ class MainWidget(QWidget):
     def chat_with_contact(self, contact):
         try:
             print(f"Chatting with {contact}")
+            self.remove_messages()
+            messages = db.Database().get_messages(contact)
+            self.add_message(messages)
         except Exception as e:
             print(f"Error: {e}")
 
 
-        
-    
 
 
-class interface(QMainWindow):
+class Interface(QMainWindow):
     def __init__(self):
         super().__init__()
         #self.setWindowTitle("Nexus")
@@ -343,6 +350,6 @@ class interface(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = interface()
+    window = Interface()
     window.show()
     sys.exit(app.exec())
