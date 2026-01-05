@@ -60,6 +60,10 @@ class Database:
             ORDER BY m.timestamp ASC
         ''', (contact_name,))
         return self.cursor.fetchall()
+    
+    def delete_contact(self, name):
+        self.cursor.execute('DELETE FROM contacts WHERE name = ?', (name,))
+        self.connection.commit()
 
     def close(self):
         self.connection.close()
@@ -67,9 +71,9 @@ class Database:
 
 if __name__ == "__main__":
     db = Database()
-    db.add_contact('Alice')
-    db.add_message('Alice', 'Hello, Alice!', direction=False)
-    messages = db.get_messages('Alice')
-    for message, timestamp in messages:
-        print(f"{timestamp}: {message}")
+    for i, contact in enumerate(db.get_contacts()):
+        print(f"Contact {i}: {contact}")
+        if i >= 3:
+            db.delete_contact(contact)
     db.close()
+        
