@@ -37,13 +37,13 @@ class Database:
         except sqlite3.IntegrityError:
             pass
 
-    def add_message(self, contact_name, message, direction=True):
+    def add_message(self, contact_name, message, direction=True, timestamp=None):
         try:
             self.cursor.execute('SELECT id FROM contacts WHERE name = ?', (contact_name,))
             contact = self.cursor.fetchone()
             if contact:
                 contact_id = contact[0]
-                self.cursor.execute('INSERT INTO messages (contact_id, message, direction) VALUES (?, ?, ?)', (contact_id, message, direction))
+                self.cursor.execute('INSERT INTO messages (contact_id, message, direction, timestamp) VALUES (?, ?, ?, ?)', (contact_id, message, direction, datetime.now()))
                 self.connection.commit()
         except Exception as e:
             print(f"Error adding message: {e}")
@@ -54,7 +54,7 @@ class Database:
 
     def get_messages(self, contact_name):
         self.cursor.execute('''
-            SELECT m.message, m.direction FROM messages m
+            SELECT m.message, m.direction, m.timestamp FROM messages m
             JOIN contacts c ON m.contact_id = c.id
             WHERE c.name = ?
             ORDER BY m.timestamp ASC
@@ -71,9 +71,5 @@ class Database:
 
 if __name__ == "__main__":
     db = Database()
-    for i, contact in enumerate(db.get_contacts()):
-        print(f"Contact {i}: {contact}")
-        if i >= 3:
-            db.delete_contact(contact)
     db.close()
         

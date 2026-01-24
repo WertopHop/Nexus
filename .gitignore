@@ -1,0 +1,172 @@
+# ===========================
+# Python
+# ===========================
+
+# Виртуальные окружения
+venv/
+env/
+ENV/
+.venv/
+.virtualenv/
+venv.bak/
+
+# Python кэш (создаётся автоматически)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# ===========================
+# База данных (ВАЖНО!)
+# ===========================
+
+# SQLite базы (содержат личные данные пользователей!)
+*.db
+*.sqlite
+*.sqlite3
+data/nexus.db
+data/*.db
+
+# Бэкапы баз данных
+*.db-journal
+*.db-shm
+*.db-wal
+
+# ===========================
+# PySide6 / Qt
+# ===========================
+
+# Скомпилированные UI файлы (если используете Qt Designer)
+*.ui.py
+ui_*.py
+
+# Qt кэш
+.qmake.stash
+*.pro.user
+*.pro.user.*
+
+# ===========================
+# WebRTC / Логи
+# ===========================
+
+# Логи приложения
+*.log
+logs/
+*.log.*
+
+# Временные файлы WebRTC
+*.rtc
+webrtc_internals/
+
+# ===========================
+# IDE и редакторы
+# ===========================
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+.idea_modules/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.*.swp
+
+# ===========================
+# Операционная система
+# ===========================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+.Trash-*
+
+# ===========================
+# Конфигурация и секреты
+# ===========================
+
+# Переменные окружения (если будут API ключи)
+.env
+.env.local
+.env.*.local
+config.json
+secrets.json
+
+# Пользовательские настройки
+user_config.json
+settings.json
+
+# ===========================
+# Тестирование
+# ===========================
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Unit test
+.cache/
+nosetests.xml
+coverage.xml
+
+# ===========================
+# Прочее
+# ===========================
+
+# Временные файлы
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Архивы (обычно не нужны в Git)
+*.zip
+*.tar.gz
+*.rar
+
+# pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Jupyter Notebook (если будете использовать)
+.ipynb_checkpoints/
+
+# ===========================
+# ВАЖНО: ЧТО ДОЛЖНО БЫТЬ В GIT
+# ===========================
+
+# Иконки нужны для GUI!
+!icons/
+!icons/*.png
+!icons/*.svg
+!icons/*.ico
+
+# Пример конфигурации (без секретов)
+!config.example.json

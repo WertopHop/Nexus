@@ -1,10 +1,43 @@
-from unicodedata import name
-from PySide6.QtWidgets import (QApplication, QMainWindow, QGridLayout, QWidget, QScrollArea,
+from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QScrollArea,
                                QPushButton, QLineEdit, QHBoxLayout, QVBoxLayout, QLabel)
-from PySide6.QtCore import Qt, QSize, QPoint
-from PySide6.QtGui import QIcon, QPixmap, QScreen
+from PySide6.QtCore import Qt, QSize, QPoint, QThread, Signal, Slot
+from PySide6.QtGui import QIcon
 import sys
+import asyncio
 import database as db
+from datetime import datetime
+from nexus_socket import P2PMessenger
+
+
+# Конфигурация
+SIGNALING_SERVER = "http://localhost:8080"
+PEER_ID = None
+
+
+class AsyncWorker(QThread):
+    def __init__(self, messenger: P2PMessenger):
+        super().__init__()
+        self.messenger = messenger
+        self.loop = None
+        self.running = True
+
+    def run(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+        self.loop.run_until_complete(self.messenger.connect_to_signaling())
+        while self.running:
+            self.loop.run_until_complete(asyncio.sleep(0.01))
+        self.loop.run_until_complete(self.messenger.disconnect())
+        self.loop.close()
+
+    def stop(self):
+        self.running = False
+        self.wait()
+
+    def run_coroutine(self, coro):
+        """Запустить корутину в event loop потока"""
+        if self.loop and self.loop.is_running():
+            asyncio.run_coroutine_threadsafe(coro, self.loop)
 
 
 class CustomTitleBar(QWidget):
@@ -53,21 +86,18 @@ class CustomTitleBar(QWidget):
         self.minimize_btn.setIconSize(QSize(20, 20))
         self.minimize_btn.setStyleSheet(button_style)
         self.minimize_btn.clicked.connect(self.minimize_window)
-        
         self.maximize_btn = QPushButton()
         self.maximize_btn.setFixedSize(39, 39)
         self.maximize_btn.setIcon(QIcon("icons/maximize.png")) 
         self.maximize_btn.setIconSize(QSize(20, 20))
         self.maximize_btn.setStyleSheet(button_style)
         self.maximize_btn.clicked.connect(self.maximize_window)
-        
         self.close_btn = QPushButton()
         self.close_btn.setFixedSize(39, 39)
         self.close_btn.setIcon(QIcon("icons/close.png"))
         self.close_btn.setIconSize(QSize(20, 20))
         self.close_btn.setStyleSheet(close_button_style)
         self.close_btn.clicked.connect(self.close_window)
-        
         layout.addWidget(self.minimize_btn)
         layout.addWidget(self.maximize_btn)
         layout.addWidget(self.close_btn)
@@ -105,8 +135,16 @@ class CustomTitleBar(QWidget):
 
 
 class MainWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, messenger: P2PMessenger = None, async_worker: AsyncWorker = None):
         super().__init__(parent)
+        self.messenger = messenger
+        self.async_worker = async_worker
+        self.database = db.Database()
+        if self.messenger:
+            self.messenger.signals.message_received.connect(self.on_message_received)
+            self.messenger.signals.incoming_call.connect(self.on_incoming_call)
+            self.messenger.signals.connection_established.connect(self.on_connection_established)
+            self.messenger.signals.connection_closed.connect(self.on_connection_closed)
         self.setStyleSheet("background-color: #1e1e1e;")
         self.main_frame = QHBoxLayout(self)
         self.main_frame.setContentsMargins(0, 0, 0, 0)
@@ -116,8 +154,26 @@ class MainWidget(QWidget):
         separator.setFixedWidth(1)
         separator.setStyleSheet("background-color: #3a3a3a;")
         self.main_frame.addWidget(separator)
-        
         self.main_frame.addLayout(self.mainframe_notification(), 8)
+
+    @Slot(str, str)
+    def on_message_received(self, peer_id: str, message: str):
+        self.receive_message(peer_id, message)
+
+    @Slot(str)
+    def on_incoming_call(self, peer_id: str):
+        contacts = self.database.get_contacts()
+        if peer_id not in contacts:
+            self.database.add_contact(peer_id)
+            self.add_buttons()
+
+    @Slot(str)
+    def on_connection_established(self, peer_id: str):
+        pass
+
+    @Slot(str)
+    def on_connection_closed(self, peer_id: str):
+        pass
 
     def contacts_frame_widget(self):
         contacts_frame = QVBoxLayout()
@@ -148,9 +204,9 @@ class MainWidget(QWidget):
                 background-color: #1f3025;
             }
         """
-        line_edit = QLineEdit()
-        line_edit.setFixedSize(240, 45)
-        line_edit.setStyleSheet("""
+        self.peer_id_input = QLineEdit()
+        self.peer_id_input.setFixedSize(240, 45)
+        self.peer_id_input.setStyleSheet("""
             QLineEdit {
                 background-color: #3a3a3a;
                 border: 2px solid #2d4532;
@@ -163,18 +219,18 @@ class MainWidget(QWidget):
                 border: 2px solid #3a5a3f;
             }
         """)
-        line_edit.setPlaceholderText("Enter peer ID")
+        self.peer_id_input.setPlaceholderText("Enter peer ID")
         
         self.button_add = QPushButton()
         self.button_add.setFixedSize(240, 50)
         self.button_add.setStyleSheet(button_add_style)
         self.button_add.setText("Add Contact")
-        self.button_add.clicked.connect(lambda checked: self.add_contact(line_edit.text()))
+        self.button_add.clicked.connect(lambda checked: self.add_contact(self.peer_id_input.text()))
         
         button_add_frame_layout = QVBoxLayout(button_add_frame)
         button_add_frame_layout.setContentsMargins(30, 15, 30, 15)
         button_add_frame_layout.setSpacing(10)
-        button_add_frame_layout.addWidget(line_edit, alignment=Qt.AlignHCenter)
+        button_add_frame_layout.addWidget(self.peer_id_input, alignment=Qt.AlignHCenter)
         button_add_frame_layout.addWidget(self.button_add, alignment=Qt.AlignHCenter)
         return button_add_frame
 
@@ -256,15 +312,34 @@ class MainWidget(QWidget):
         """)
         header_layout.addWidget(self.contact_name_label)
         header_layout.addStretch()
+        self.call_button = QPushButton("Connect")
+        self.call_button.setFixedSize(100, 35)
+        self.call_button.setStyleSheet("""
+            QPushButton {
+                background-color: #2d4532;
+                border-radius: 17px;
+                font-size: 13px;
+                font-weight: bold;
+                color: #ffffff;
+            }
+            QPushButton:hover {
+                background-color: #3a5a3f;
+            }
+            QPushButton:pressed {
+                background-color: #1f3025;
+            }
+        """)
+        self.call_button.clicked.connect(self.initiate_call)
+        header_layout.addWidget(self.call_button)
         message_frame.addWidget(chat_header)
         message_frame.addWidget(self.scroll_area_message_widget())
         message_frame.addWidget(self.input_message_widget())
         return message_frame
 
     def scroll_area_message_widget(self):
-        scroll_area_message = QScrollArea()
-        scroll_area_message.setWidgetResizable(True)
-        scroll_area_message.setStyleSheet("""
+        self.scroll_area_message = QScrollArea()
+        self.scroll_area_message.setWidgetResizable(True)
+        self.scroll_area_message.setStyleSheet("""
             QScrollArea {
                 background-color: #1e1e1e;
                 border: none;
@@ -286,8 +361,8 @@ class MainWidget(QWidget):
                 height: 0px;
             }
         """)
-        scroll_area_message.setWidget(self.messages_container_widget())
-        return scroll_area_message
+        self.scroll_area_message.setWidget(self.messages_container_widget())
+        return self.scroll_area_message
 
     def messages_container_widget(self):
         messages_container = QWidget()
@@ -348,41 +423,58 @@ class MainWidget(QWidget):
         
         return input_container
 
-    def send_message(self):
-        print("Sending message...")
-        message_text = self.input_message.text().strip()
-        if message_text:
-            if hasattr(self, 'contact_name') and self.contact_name:
-                print("Found contact button")
-                db.Database().add_message(self.contact_name, message_text, direction=False)
-                self.add_message([(message_text, 0)])
-                self.input_message.clear()
+    def initiate_call(self):
+        if hasattr(self, 'contact_name') and self.contact_name and self.async_worker:
+            self.async_worker.run_coroutine(self.messenger.call_peer(self.contact_name))
 
-    def remove_messages(self):        
+    def send_message(self):
+        message_text = self.input_message.text().strip()
+        if message_text and hasattr(self, 'contact_name') and self.contact_name:
+            self.database.add_message(self.contact_name, message_text, direction=False)
+            self.add_message([(message_text, 0, datetime.now())])
+            if self.async_worker and self.messenger:
+                self.async_worker.run_coroutine(
+                    self.messenger.send_message(self.contact_name, message_text)
+                )
+            self.input_message.clear()
+            self.scroll_to_bottom()
+
+    def receive_message(self, sender_name: str, message_text: str):
+        self.database.add_message(sender_name, message_text, direction=True)
+        if hasattr(self, 'contact_name') and self.contact_name == sender_name:
+            if self.main_frame.itemAt(2).layout() != self.frame_notification:
+                self.add_message([(message_text, 1, datetime.now())])
+                self.scroll_to_bottom()
+
+    def scroll_to_bottom(self):
+        if hasattr(self, 'scroll_area_message'):
+            scrollbar = self.scroll_area_message.verticalScrollBar()
+            scrollbar.setValue(scrollbar.maximum())
+
+    def remove_messages(self):
         while self.messages.count():
             item = self.messages.takeAt(0)
             widget = item.widget()
             if widget is not None:
                 widget.deleteLater()
 
-    def add_contact(self, name):
+    def add_contact(self, name: str):
         if name.strip():
             self.button_add.setEnabled(False)
-            db.Database().add_contact(name)
+            self.database.add_contact(name)
             self.add_buttons()
+            self.peer_id_input.clear()
             self.button_add.setEnabled(True)
 
     def add_message(self, data_messages):
         try:
-            for message, sender in data_messages:
+            for message, sender, timestamp in data_messages:
                 message_container = QWidget()
                 message_layout = QHBoxLayout(message_container)
                 message_layout.setContentsMargins(0, 0, 0, 0)
-                
                 message_label = QLabel(message)
                 message_label.setWordWrap(True)
                 message_label.setMaximumWidth(600)
-                
                 if sender == 1:
                     message_label.setStyleSheet("""
                         QLabel {
@@ -407,24 +499,20 @@ class MainWidget(QWidget):
                     """)
                     message_layout.addStretch()
                     message_layout.addWidget(message_label, alignment=Qt.AlignRight)
-                
                 self.messages.addWidget(message_container)
         except Exception as e:
-            print(f"Error adding message: {e}")
+            pass
 
     def add_buttons(self):
         try:
             for name, button in list(self.contacts_buttons.items()):
                 button.deleteLater()
             self.contacts_buttons.clear()
-            
-            contacts = db.Database().get_contacts()
-            
+            contacts = self.database.get_contacts()
             for name in contacts:
                 contact_button = QPushButton()
                 contact_button.setFixedHeight(65)
                 contact_button.setText(name)
-                
                 contact_button.setStyleSheet("""
                     QPushButton { 
                         background-color: #2d2d2d;
@@ -442,15 +530,13 @@ class MainWidget(QWidget):
                         background-color: #2d4532;
                     }
                 """)
-                
                 contact_button.clicked.connect(lambda checked, n=name: self.chat_with_contact(n))
                 self.contacts_frame.insertWidget(self.contacts_frame.count() - 1, contact_button)
                 self.contacts_buttons[name] = contact_button
-                
         except Exception as e:
-            print(f"Error adding contact button: {e}")
+            pass
 
-    def highlight_active_contact(self, contact_name):
+    def highlight_active_contact(self, contact_name: str):
         for name, button in self.contacts_buttons.items():
             if name == contact_name:
                 button.setStyleSheet("""
@@ -487,7 +573,7 @@ class MainWidget(QWidget):
                     }
                 """)
 
-    def chat_with_contact(self, contact):
+    def chat_with_contact(self, contact: str):
         try:
             self.contact_name = contact
             self.highlight_active_contact(contact)
@@ -495,31 +581,49 @@ class MainWidget(QWidget):
                 self.main_frame.removeItem(self.frame_notification)
                 self.main_frame.addLayout(self.message_frame_widget(), 8)
             self.contact_name_label.setText(contact)
-            print(f"Chatting with {contact}")
             self.remove_messages()
             self.messages.addStretch(1)
-            messages = db.Database().get_messages(contact)
+            messages = self.database.get_messages(contact)
             self.add_message(messages)
+            self.scroll_to_bottom()
         except Exception as e:
-            print(f"Error: {e}")
-
+            pass
 
 class Interface(QMainWindow):
-    def __init__(self):
+    def __init__(self, peer_id: str, signaling_server: str):
         super().__init__()
+        self.messenger = P2PMessenger(peer_id, signaling_server)
+        self.async_worker = AsyncWorker(self.messenger)
+        self.async_worker.start()
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
         main_layout.addWidget(CustomTitleBar(self))
-        main_layout.addWidget(MainWidget(self))
+        main_layout.addWidget(MainWidget(self, self.messenger, self.async_worker))
         self.setGeometry(100, 100, 1200, 700)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        self.setWindowTitle(f"Nexus - {peer_id}")
+
+    def closeEvent(self, event):
+        self.async_worker.stop()
+        event.accept()
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description='Nexus P2P Messenger')
+    parser.add_argument('peer_id', help='Your unique peer ID')
+    parser.add_argument('--server', default='http://localhost:8080', 
+                        help='Signaling server URL (default: http://localhost:8080)')
+    args = parser.parse_args()
+    
+    app = QApplication(sys.argv)
+    window = Interface(args.peer_id, args.server)
+    window.show()
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = Interface()
-    window.show()
-    sys.exit(app.exec())
+    main()
