@@ -612,15 +612,10 @@ class Interface(QMainWindow):
 
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(description='Nexus P2P Messenger')
-    parser.add_argument('peer_id', help='Your unique peer ID')
-    parser.add_argument('--server', default='http://localhost:8080', 
-                        help='Signaling server URL (default: http://localhost:8080)')
-    args = parser.parse_args()
-    
+    peer_id=input("input your peer_id:")
+    server = input("server:")
     app = QApplication(sys.argv)
-    window = Interface(args.peer_id, args.server)
+    window = Interface(peer_id, server)
     window.show()
     sys.exit(app.exec())
 
