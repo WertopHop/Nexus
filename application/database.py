@@ -1,12 +1,12 @@
 import sqlite3
-import json
 from datetime import datetime
 from pathlib import Path
+from utils import get_user_data_dir
 
 class Database:
-    def __init__(self, db_path='data/nexus.db'):
-        Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-        self.db_path = Path(db_path)
+    def __init__(self, db_name='nexus.db'):
+        data_dir = Path(get_user_data_dir())
+        self.db_path = data_dir / db_name
         self.connection = sqlite3.connect(self.db_path)
         self.cursor = self.connection.cursor()
         self.initialize_database()
