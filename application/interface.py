@@ -612,9 +612,16 @@ class Interface(QMainWindow):
 
 
 def main():
-    peer_id=input("input your peer_id:")
-    server = input("server:")
     app = QApplication(sys.argv)
+    
+    dialog = LoginDialog()
+    if dialog.exec() != QDialog.Accepted:
+        sys.exit(0)
+    
+    peer_id, server = dialog.get_values()
+    if not peer_id:
+        sys.exit(0)
+
     window = Interface(peer_id, server)
     window.show()
     sys.exit(app.exec())
