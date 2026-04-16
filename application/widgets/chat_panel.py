@@ -110,10 +110,6 @@ class ChatPanel(QWidget):
             self.add_message([(message_text, 1, datetime.now())])
             self.scroll_to_bottom()
 
-    def initiate_call(self):
-        if self.contact_name and self.async_worker:
-            self.async_worker.run_coroutine(self.messenger.call_peer(self.contact_name))
-
     def send_message(self):
         message_text = self.input_message.text().strip()
         if message_text and self.contact_name:

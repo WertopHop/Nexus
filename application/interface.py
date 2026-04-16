@@ -20,8 +20,7 @@ class MainWidget(QWidget):
         super().__init__(parent)
         self.messenger = messenger
         self.setStyleSheet(styles.MAIN_BG)
-
-        self.contacts_panel = ContactsPanel()
+        self.contacts_panel = ContactsPanel(messenger=messenger, async_worker=async_worker)
         self.chat_panel = ChatPanel(messenger=messenger, async_worker=async_worker)
         self.contacts_panel.contact_selected.connect(self.on_contact_selected)
 

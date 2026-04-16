@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QScrollArea, QPushButton, QLineEdit, QHBoxLayout, QVBoxLayout
+from PySide6.QtWidgets import QWidget, QScrollArea, QPushButton, QLineEdit, QHBoxLayout, QVBoxLayout, QMenu
 from PySide6.QtCore import Qt, Signal
 import database as db
 import styles
@@ -6,11 +6,12 @@ import styles
 
 class ContactsPanel(QWidget):
     contact_selected = Signal(str)
-
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, messenger=None, async_worker=None):
         super().__init__(parent)
         self.database = db.Database()
         self.contacts_buttons = {}
+        self.messenger = messenger
+        self.async_worker = async_worker
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -77,10 +78,17 @@ class ContactsPanel(QWidget):
                 contact_button.setText(name)
                 contact_button.setStyleSheet(styles.CONTACT_BTN)
                 contact_button.clicked.connect(lambda checked, n=name: self.contact_selected.emit(n))
+                contact_button.setContextMenuPolicy(Qt.CustomContextMenu)
+                contact_button.customContextMenuRequested.connect(lambda pos, n=name: self._show_contact_menu(pos, n))
                 self.contacts_frame.insertWidget(self.contacts_frame.count() - 1, contact_button)
                 self.contacts_buttons[name] = contact_button
+                self.initiate_call(name)
         except Exception as e:
             pass
+
+    def initiate_call(self, contact_name: str):
+        if contact_name and self.async_worker:
+            self.async_worker.run_coroutine(self.messenger.call_peer(contact_name))
 
     def highlight(self, contact_name: str):
         for name, button in self.contacts_buttons.items():
@@ -88,3 +96,20 @@ class ContactsPanel(QWidget):
                 button.setStyleSheet(styles.CONTACT_BTN_ACTIVE)
             else:
                 button.setStyleSheet(styles.CONTACT_BTN)
+
+    def _show_contact_menu(self, pos, contact_name: str):
+        button = self.contacts_buttons.get(contact_name)
+        if button is None:
+            return
+
+        menu = QMenu(self)
+        delete_action = menu.addAction("Delete contact")
+        # menu.addAction("...")
+
+        action = menu.exec(button.mapToGlobal(pos))
+        if action == delete_action:
+            self._delete_contact(contact_name)
+
+    def _delete_contact(self, contact_name: str):
+        self.database.delete_contact(contact_name)
+        self.refresh_buttons()
