@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QDialog
-from PySide6.QtCore import Qt, Slot
+from PySide6.QtCore import Qt, QPoint, Slot
 import sys
 from nexus_socket import P2PMessenger
 import widgets.styles as styles
@@ -80,6 +80,32 @@ class Interface(QMainWindow):
         self.setGeometry(100, 100, 1200, 700)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setWindowTitle(f"Nexus - {peer_id}")
+
+    def nativeEvent(self, eventType, message):
+        if eventType == b"windows_generic_MSG":
+            import ctypes
+            import ctypes.wintypes
+            msg = ctypes.wintypes.MSG.from_address(int(message))
+            if msg.message == 0x0084:
+                x = ctypes.c_int16(msg.lParam & 0xFFFF).value
+                y = ctypes.c_int16((msg.lParam >> 16) & 0xFFFF).value
+                dpr = self.devicePixelRatio()
+                pos = self.mapFromGlobal(QPoint(round(x / dpr), round(y / dpr)))
+                border = 6
+                left   = pos.x() < border
+                right  = pos.x() > self.width()  - border
+                top    = pos.y() < border
+                bottom = pos.y() > self.height() - border
+                if not self.isMaximized():
+                    if top    and left:  return True, 13
+                    if top    and right: return True, 14
+                    if bottom and left:  return True, 16
+                    if bottom and right: return True, 17
+                    if left:             return True, 10
+                    if right:            return True, 11
+                    if top:              return True, 12
+                    if bottom:           return True, 15
+        return super().nativeEvent(eventType, message)
 
     def closeEvent(self, event):
         self.async_worker.stop()
