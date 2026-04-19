@@ -39,11 +39,11 @@ class ChatPanel(QWidget):
         self.contact_name_label.setStyleSheet(styles.CHAT_CONTACT_LABEL)
         header_layout.addWidget(self.contact_name_label)
         header_layout.addStretch()
-        self.call_button = QPushButton("Connect")
+        '''self.call_button = QPushButton("Connect")
         self.call_button.setFixedSize(100, 35)
         self.call_button.setStyleSheet(styles.BTN_CALL)
         self.call_button.clicked.connect(self.initiate_call)
-        header_layout.addWidget(self.call_button)
+        header_layout.addWidget(self.call_button)'''
 
         chat_layout.addWidget(chat_header)
         chat_layout.addWidget(self._build_scroll_area(), 1)

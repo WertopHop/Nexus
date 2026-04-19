@@ -1,8 +1,4 @@
-# ===========================
-# Python
-# ===========================
-
-# Виртуальные окружения
+# virtual environments
 venv/
 env/
 ENV/
@@ -10,7 +6,7 @@ ENV/
 .virtualenv/
 venv.bak/
 
-# Python кэш (создаётся автоматически)
+# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
@@ -20,51 +16,35 @@ __pycache__/
 dist/
 build/
 
-# ===========================
-# База данных (ВАЖНО!)
-# ===========================
-
-# SQLite базы (содержат личные данные пользователей!)
+# SQLite databases
 *.db
 *.sqlite
 *.sqlite3
 data/nexus.db
 data/*.db
 
-# Бэкапы баз данных
+# Database backups
 *.db-journal
 *.db-shm
 *.db-wal
 
-# ===========================
-# PySide6 / Qt
-# ===========================
-
-# Скомпилированные UI файлы (если используете Qt Designer)
+# Compiled UI files
 *.ui.py
 ui_*.py
 
-# Qt кэш
+# Qt cache
 .qmake.stash
 *.pro.user
 *.pro.user.*
 
-# ===========================
-# WebRTC / Логи
-# ===========================
-
-# Логи приложения
+# Application logs
 *.log
 logs/
 *.log.*
 
-# Временные файлы WebRTC
+# Temporary WebRTC files
 *.rtc
 webrtc_internals/
-
-# ===========================
-# IDE и редакторы
-# ===========================
 
 # PyCharm
 .idea/
@@ -86,44 +66,22 @@ webrtc_internals/
 *~
 .*.swp
 
-# ===========================
-# Операционная система
-# ===========================
-
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-._*
-
 # Windows
 Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 
-# Linux
-.directory
-.Trash-*
-
-# ===========================
-# Конфигурация и секреты
-# ===========================
-
-# Переменные окружения (если будут API ключи)
+# Environment variables
 .env
 .env.local
 .env.*.local
 config.json
 secrets.json
 
-# Пользовательские настройки
+# user configs
 user_config.json
 settings.json
-
-# ===========================
-# Тестирование
-# ===========================
 
 # pytest
 .pytest_cache/
@@ -136,17 +94,13 @@ htmlcov/
 nosetests.xml
 coverage.xml
 
-# ===========================
-# Прочее
-# ===========================
-
-# Временные файлы
+# temporary files
 *.tmp
 *.temp
 *.bak
 *.backup
 
-# Архивы (обычно не нужны в Git)
+# archives
 *.zip
 *.tar.gz
 *.rar
@@ -155,18 +109,22 @@ coverage.xml
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Jupyter Notebook (если будете использовать)
+# Build Nuitka
+*.dist/
+*.onefile-build/
+*.build/
+
+# PyInstaller
+*.spec
+
+# Jupyter Notebook
 .ipynb_checkpoints/
 
-# ===========================
-# ВАЖНО: ЧТО ДОЛЖНО БЫТЬ В GIT
-# ===========================
-
-# Иконки нужны для GUI!
+# icons for GUI!
 !icons/
 !icons/*.png
 !icons/*.svg
 !icons/*.ico
 
-# Пример конфигурации (без секретов)
+# config
 !config.example.json
