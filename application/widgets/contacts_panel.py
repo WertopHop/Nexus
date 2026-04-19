@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget, QScrollArea, QPushButton, QLineEdit, QHBoxLayout, QVBoxLayout, QMenu
 from PySide6.QtCore import Qt, Signal
 import database as db
-import styles
+import widgets.styles as styles
 
 
 class ContactsPanel(QWidget):

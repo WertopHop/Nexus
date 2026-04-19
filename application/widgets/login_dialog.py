@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QDialog, QPushButton, QLineEdit, QVBoxLayout, QLabel
 from PySide6.QtCore import Qt
-import styles
+import widgets.styles as styles
 
 
 class LoginDialog(QDialog):

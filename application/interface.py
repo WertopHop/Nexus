@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, Q
 from PySide6.QtCore import Qt, Slot
 import sys
 from nexus_socket import P2PMessenger
-import styles
+import widgets.styles as styles
 from async_worker import AsyncWorker
 from widgets.login_dialog import LoginDialog
 from widgets.title_bar import CustomTitleBar

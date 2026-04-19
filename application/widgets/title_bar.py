@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton
 from PySide6.QtCore import Qt, QSize, QPoint
 from PySide6.QtGui import QIcon
-import styles
+import widgets.styles as styles
 from utils import resource_path
 
 

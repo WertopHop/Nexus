@@ -1,4 +1,3 @@
-# Title bar
 TITLE_LABEL = """
     QLabel {
         color: #ffffff;
@@ -29,14 +28,12 @@ TITLEBAR_CLOSE_BUTTON = """
     }
 """
 
-# Backgrounds
 MAIN_BG = "background-color: #1e1e1e;"
 PANEL_BG = "background-color: #252525;"
 SEPARATOR_BG = "background-color: #3a3a3a;"
 CHAT_HEADER_BG = "background-color: #252525; border-bottom: 1px solid #3a3a3a;"
 INPUT_CONTAINER_BG = "background-color: #252525; border-top: 1px solid #3a3a3a;"
 
-# Buttons
 BTN_PRIMARY = """
     QPushButton { 
         background-color: #2d4532;
@@ -132,7 +129,6 @@ CONTACT_BTN_ACTIVE = """
     }
 """
 
-# Inputs
 INPUT_FIELD = """
     QLineEdit {
         background-color: #3a3a3a;
@@ -161,7 +157,6 @@ INPUT_MESSAGE = """
     }
 """
 
-# Scroll areas
 SCROLL_CONTACTS = """
     QScrollArea {
         background-color: #252525;
@@ -208,7 +203,6 @@ SCROLL_MESSAGES = """
     }
 """
 
-# Labels
 NOTIFICATION_LABEL = """
     QLabel {
         color: #666666;
@@ -227,7 +221,6 @@ CHAT_CONTACT_LABEL = """
 
 LOGIN_TITLE = "color: #ffffff; font-size: 24px; font-weight: bold;"
 
-# Messages
 MSG_RECEIVED = """
     QLabel {
         background-color: #2d3a3d;

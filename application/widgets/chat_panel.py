@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (QWidget, QScrollArea, QPushButton, QLineEdit,
 from PySide6.QtCore import Qt
 from datetime import datetime
 import database as db
-import styles
+import widgets.styles as styles
 
 
 class ChatPanel(QWidget):
