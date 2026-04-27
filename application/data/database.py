@@ -76,9 +76,4 @@ class Database:
 
     def close(self):
         self.connection.close()
-
-
-if __name__ == "__main__":
-    db = Database()
-    db.close()
         

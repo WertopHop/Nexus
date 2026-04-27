@@ -36,22 +36,3 @@ def decode_message(encrypted_message: str, key: bytes) -> str:
     padded = decryptor.update(ct) + decryptor.finalize()
     unpadder = padding.PKCS7(128).unpadder()
     return (unpadder.update(padded) + unpadder.finalize()).decode()
-
-
-
-
-
-
-
-
-
-if __name__ == "__main__":
-    password = "my_secure_password"
-    salt = b"this_is_a_complex_salt"
-    key = generate_key_from_password(password, salt)
-    message = "Привет! Это секретное сообщение."
-    encrypted_message = encode_message(message, key)
-    print(f"Encrypted message: {encrypted_message}")
-    decrypted_message = decode_message(encrypted_message, key)
-    print(f"Decrypted message: {decrypted_message}")
-    print(f"Generated key: {key.decode()}")

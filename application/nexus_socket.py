@@ -11,6 +11,9 @@ from socket_parts.dh import (
     dh_make_init_message,
     dh_make_resp_message,
     dh_is_handshake_message,
+    encrypt_message,
+    decrypt_message,
+    is_encrypted_message,
 )
 from socket_parts.signals import P2PMessengerSignals
 
@@ -119,6 +122,14 @@ class P2PMessenger:
         def on_message(message):
             if dh_is_handshake_message(message):
                 asyncio.create_task(self._dh_handle_message(peer_id, message))
+            elif is_encrypted_message(message):
+                key = self.encryption_keys.get(peer_id)
+                if key:
+                    try:
+                        plaintext = decrypt_message(key, message)
+                        self.signals.message_received.emit(peer_id, plaintext)
+                    except ValueError:
+                        logging.warning("Failed to decrypt message from %s", peer_id)
             else:
                 self.signals.message_received.emit(peer_id, message)
 
@@ -148,7 +159,6 @@ class P2PMessenger:
         msg_type = data.get("_n")
 
         if msg_type == "dh_init":
-            # Responder: receive initiator's public key, reply with ours, derive shared key
             peer_public_key = dh_decode_public_key(data["pub"])
             private_key, public_key = dh_generate_keypair()
             self.encryption_keys[peer_id] = dh_derive_key(private_key, peer_public_key)
@@ -158,7 +168,6 @@ class P2PMessenger:
             self.signals.dh_key_established.emit(peer_id)
 
         elif msg_type == "dh_resp":
-            # Initiator: receive responder's public key, derive shared key
             private_key = self._dh_private_keys.pop(peer_id, None)
             if private_key is None:
                 return
@@ -242,7 +251,9 @@ class P2PMessenger:
     async def send_message(self, peer_id: str, message: str) -> bool:
         channel = self.data_channels.get(peer_id)
         if channel and channel.readyState == "open":
-            channel.send(message)
+            key = self.encryption_keys.get(peer_id)
+            payload = encrypt_message(key, message) if key else message
+            channel.send(payload)
             return True
         return False
 
@@ -250,7 +261,9 @@ class P2PMessenger:
         sent_count = 0
         for peer_id, channel in self.data_channels.items():
             if channel.readyState == "open":
-                channel.send(message)
+                key = self.encryption_keys.get(peer_id)
+                payload = encrypt_message(key, message) if key else message
+                channel.send(payload)
                 sent_count += 1
         return sent_count
 

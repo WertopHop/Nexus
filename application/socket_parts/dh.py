@@ -3,6 +3,7 @@ import json
 import secrets
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 _DH_PRIME = int(
     'FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD1'
@@ -51,3 +52,30 @@ def dh_make_resp_message(public_key: int) -> str:
 
 def dh_is_handshake_message(message: str) -> bool:
     return isinstance(message, str) and message.startswith('{"_n":')
+
+
+# ------------------------------------------------------------------
+# AES-256-GCM encryption / decryption
+# ------------------------------------------------------------------
+
+_NONCE_SIZE = 12  
+
+def encrypt_message(key: bytes, plaintext: str) -> str:
+    nonce = secrets.token_bytes(_NONCE_SIZE)
+    ciphertext = AESGCM(key).encrypt(nonce, plaintext.encode('utf-8'), None)
+    payload = base64.b64encode(nonce + ciphertext).decode('ascii')
+    return json.dumps({"_e": payload})
+
+
+def decrypt_message(key: bytes, raw: str) -> str:
+    try:
+        data = json.loads(raw)
+        nonce_ct = base64.b64decode(data["_e"])
+        nonce, ciphertext = nonce_ct[:_NONCE_SIZE], nonce_ct[_NONCE_SIZE:]
+        return AESGCM(key).decrypt(nonce, ciphertext, None).decode('utf-8')
+    except Exception as exc:
+        raise ValueError(f"Decryption failed: {exc}") from exc
+
+
+def is_encrypted_message(message: str) -> bool:
+    return isinstance(message, str) and message.startswith('{"_e":')
