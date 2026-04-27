@@ -16,12 +16,12 @@ PEER_ID = None
 
 
 class MainWidget(QWidget):
-    def __init__(self, parent=None, messenger: P2PMessenger = None, async_worker: AsyncWorker = None):
+    def __init__(self, parent=None, messenger: P2PMessenger = None, async_worker: AsyncWorker = None, database=None):
         super().__init__(parent)
         self.messenger = messenger
         self.setStyleSheet(styles.MAIN_BG)
-        self.contacts_panel = ContactsPanel(messenger=messenger, async_worker=async_worker)
-        self.chat_panel = ChatPanel(messenger=messenger, async_worker=async_worker)
+        self.contacts_panel = ContactsPanel(messenger=messenger, async_worker=async_worker, database=database)
+        self.chat_panel = ChatPanel(messenger=messenger, async_worker=async_worker, database=database)
         self.contacts_panel.contact_selected.connect(self.on_contact_selected)
 
         if self.messenger:
@@ -65,7 +65,7 @@ class MainWidget(QWidget):
         pass
 
 class Interface(QMainWindow):
-    def __init__(self, peer_id: str, signaling_server: str):
+    def __init__(self, peer_id: str, signaling_server: str, database):
         super().__init__()
         self.messenger = P2PMessenger(peer_id, signaling_server)
         self.async_worker = AsyncWorker(self.messenger)
@@ -76,7 +76,7 @@ class Interface(QMainWindow):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
         main_layout.addWidget(CustomTitleBar(self))
-        main_layout.addWidget(MainWidget(self, self.messenger, self.async_worker))
+        main_layout.addWidget(MainWidget(self, self.messenger, self.async_worker, database))
         self.setGeometry(100, 100, 1200, 700)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setWindowTitle(f"Nexus - {peer_id}")
@@ -119,11 +119,11 @@ def main():
     if dialog.exec() != QDialog.Accepted:
         sys.exit(0)
     
-    peer_id, server = dialog.get_values()
-    if not peer_id:
+    peer_id, password, server, database = dialog.get_values()
+    if not peer_id or not password:
         sys.exit(0)
 
-    window = Interface(peer_id, server)
+    window = Interface(peer_id, server, database)
     window.show()
     sys.exit(app.exec())
 

@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QDialog, QPushButton, QLineEdit, QVBoxLayout, QLabel
 from PySide6.QtCore import Qt
 import widgets.styles as styles
+import data.database as db
 
 
 class LoginDialog(QDialog):
@@ -8,7 +9,7 @@ class LoginDialog(QDialog):
         super().__init__()
         self.setWindowTitle("Nexus - Login")
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
-        self.setFixedSize(400, 250)
+        self.setFixedSize(400, 300)
         self.setStyleSheet(styles.MAIN_BG)
 
         layout = QVBoxLayout(self)
@@ -26,6 +27,12 @@ class LoginDialog(QDialog):
         self.peer_id_input.setStyleSheet(styles.INPUT_FIELD)
         layout.addWidget(self.peer_id_input)
 
+        self.password_input = QLineEdit()
+        self.password_input.setFixedHeight(45)
+        self.password_input.setPlaceholderText("Password")
+        self.password_input.setStyleSheet(styles.INPUT_FIELD)
+        layout.addWidget(self.password_input)
+
         self.server_input = QLineEdit()
         self.server_input.setFixedHeight(45)
         self.server_input.setPlaceholderText("Signaling server (default: http://localhost:8080)")
@@ -42,5 +49,7 @@ class LoginDialog(QDialog):
 
     def get_values(self):
         peer_id = self.peer_id_input.text().strip()
+        password = self.password_input.text().strip()
         server = self.server_input.text().strip() or "http://localhost:8080"
-        return peer_id, server
+        database = db.Database(peer_id, password)
+        return peer_id, password, server, database

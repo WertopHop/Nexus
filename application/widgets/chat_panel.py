@@ -2,16 +2,15 @@ from PySide6.QtWidgets import (QWidget, QScrollArea, QPushButton, QLineEdit,
                                QHBoxLayout, QVBoxLayout, QLabel, QStackedWidget)
 from PySide6.QtCore import Qt
 from datetime import datetime
-import database as db
 import widgets.styles as styles
 
 
 class ChatPanel(QWidget):
-    def __init__(self, parent=None, messenger=None, async_worker=None):
+    def __init__(self, parent=None, messenger=None, async_worker=None, database=None):
         super().__init__(parent)
         self.messenger = messenger
         self.async_worker = async_worker
-        self.database = db.Database()
+        self.database = database
         self.contact_name = None
 
         self.stack = QStackedWidget()

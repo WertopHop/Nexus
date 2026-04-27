@@ -1,14 +1,13 @@
 from PySide6.QtWidgets import QWidget, QScrollArea, QPushButton, QLineEdit, QHBoxLayout, QVBoxLayout, QMenu
 from PySide6.QtCore import Qt, Signal
-import database as db
 import widgets.styles as styles
 
 
 class ContactsPanel(QWidget):
     contact_selected = Signal(str)
-    def __init__(self, parent=None, messenger=None, async_worker=None):
+    def __init__(self, parent=None, messenger=None, async_worker=None, database=None):
         super().__init__(parent)
-        self.database = db.Database()
+        self.database = database
         self.contacts_buttons = {}
         self.messenger = messenger
         self.async_worker = async_worker
