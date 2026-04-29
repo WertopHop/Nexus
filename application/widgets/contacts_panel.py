@@ -20,7 +20,7 @@ class ContactsPanel(QWidget):
 
     def _build_add_widget(self):
         frame = QWidget()
-        frame.setFixedSize(300, 150)
+        frame.setFixedHeight(150)
         frame.setStyleSheet(styles.PANEL_BG)
 
         self.peer_id_input = QLineEdit()
@@ -43,7 +43,7 @@ class ContactsPanel(QWidget):
     def _build_scroll_area(self):
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setFixedWidth(300)
+        scroll_area.setMinimumWidth(140)
         scroll_area.setStyleSheet(styles.SCROLL_CONTACTS)
 
         contacts_container = QWidget()

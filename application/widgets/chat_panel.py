@@ -1,11 +1,13 @@
 from PySide6.QtWidgets import (QWidget, QScrollArea, QPushButton, QLineEdit,
                                QHBoxLayout, QVBoxLayout, QLabel, QStackedWidget)
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from datetime import datetime
 import widgets.styles as styles
 
 
 class ChatPanel(QWidget):
+    back_requested = Signal()
+
     def __init__(self, parent=None, messenger=None, async_worker=None, database=None):
         super().__init__(parent)
         self.messenger = messenger
@@ -34,6 +36,12 @@ class ChatPanel(QWidget):
         chat_header.setStyleSheet(styles.CHAT_HEADER_BG)
         header_layout = QHBoxLayout(chat_header)
         header_layout.setContentsMargins(20, 0, 20, 0)
+        self.back_button = QPushButton("←")
+        self.back_button.setFixedSize(35, 35)
+        self.back_button.setStyleSheet(styles.BTN_BACK)
+        self.back_button.clicked.connect(self.back_requested.emit)
+        self.back_button.hide()
+        header_layout.addWidget(self.back_button)
         self.contact_name_label = QLabel("Contact")
         self.contact_name_label.setStyleSheet(styles.CHAT_CONTACT_LABEL)
         header_layout.addWidget(self.contact_name_label)
@@ -152,3 +160,6 @@ class ChatPanel(QWidget):
             widget = item.widget()
             if widget is not None:
                 widget.deleteLater()
+
+    def set_back_button_visible(self, visible: bool):
+        self.back_button.setVisible(visible)

@@ -83,6 +83,19 @@ BTN_SEND = """
     }
 """
 
+BTN_BACK = """
+    QPushButton {
+        background-color: transparent;
+        border: none;
+        border-radius: 5px;
+        font-size: 18px;
+        color: #ffffff;
+        padding: 5px 10px;
+    }
+    QPushButton:hover { background-color: #3a3a3a; }
+    QPushButton:pressed { background-color: #2d2d2d; }
+"""
+
 BTN_LOGIN = """
     QPushButton {
         background-color: #2d4532;
